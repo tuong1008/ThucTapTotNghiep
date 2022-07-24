@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context-4.3.xsd
+http://www.springframework.org/schema/mvc
+http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:annotation-config/>
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"/>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    <bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <property name="favorPathExtension" value="false"/>
+    </bean>
+    <mvc:annotation-driven content-negotiation-manager="contentNegotiationManager"/>
+    <mvc:resources mapping="/resource/**" location="/resources/"/><!--cache-period="31556926"-->
+
+    <bean id="viewResolver"
+          p:prefix="/WEB-INF/views/" p:suffix=".jsp"
+          class="org.springframework.web.servlet.view.InternalResourceViewResolver"/>
+
+    <!-- Cấu hình package chứa các controller -->
+    <context:component-scan base-package="ptithcm.controller, ptithcm.entity"/>
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/login**"/>
+            <mvc:mapping path="/logout**"/>
+            <mvc:mapping path="/customer/**"/>
+            <mvc:mapping path="/rest/cart/**"/>
+            <mvc:mapping path="/order/**"/>
+            <mvc:mapping path="/register**"/>
+            <bean class="poly.interceptor.LoginInterceptor"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/admin/**"/>
+            <bean class="poly.interceptor.AdminInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <bean id="customerDao" class="ptithcm.daoImpl.CustomerDaoImpl"/>
+    <bean id="customerService" class="ptithcm.serviceImpl.CustomerServiceImpl"/>
+
+    <bean id="productDao" class="ptithcm.daoImpl.ProductDaoImpl"/>
+    <bean id="productService" class="ptithcm.serviceImpl.ProductServiceImpl"/>
+
+    <bean id="authoritiesDao" class="ptithcm.daoImpl.AuthoritiesDaoImpl"/>
+    <bean id="authoritiesService" class="ptithcm.serviceImpl.AuthoritiesServiceImpl"/>
+
+    <bean id="billingAddressDao" class="ptithcm.daoImpl.BillingAddressDaoImpl"/>
+    <bean id="billingAddressService" class="ptithcm.serviceImpl.BillingAddressServiceImpl"/>
+
+    <bean id="shippingAddressDao" class="ptithcm.daoImpl.ShippingAddressDaoImpl"/>
+    <bean id="shippingAddressService" class="ptithcm.serviceImpl.ShippingAddressServiceImpl"/>
+
+    <bean id="cartDao" class="ptithcm.daoImpl.CartDaoImpl"/>
+    <bean id="cartService" class="ptithcm.serviceImpl.CartServiceImpl"/>
+
+    <bean id="cartItemDao" class="ptithcm.daoImpl.CartItemDaoImpl"/>
+    <bean id="cartItemService" class="ptithcm.serviceImpl.CartItemServiceImpl"/>
+
+    <bean id="customerOrderDao" class="ptithcm.daoImpl.CustomerOrderDaoImpl"/>
+    <bean id="customerOrderService" class="ptithcm.serviceImpl.CustomerOrderServiceImpl"/>
+
+    <bean id="messageDao" class="ptithcm.daoImpl.MessageDaoImpl"/>
+    <bean id="messageService" class="ptithcm.serviceImpl.MessageServiceImpl"/>
+
+    <bean id="sessionFactory"
+          class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <!--<prop key="hibernate.hbm2ddl.auto">create-drop</prop>-->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.current_session_context_class">thread</prop>
+                <prop key="hibernate.connection.useUnicode">true</prop>
+                <prop key="hibernate.connection.CharSet">UTF-8</prop>
+                <prop key="hibernate.connection.characterEncoding">UTF-8</prop>
+            </props>
+        </property>
+        <property name="packagesToScan" value="ptithcm.entity"/>
+    </bean>
+    <bean id="transactionManager"
+          class="org.springframework.orm.hibernate4.HibernateTransactionManager"
+          p:sessionFactory-ref="sessionFactory"/>
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+<!--    <bean class="java.net.URI" id="dbUrl">
+        <constructor-arg value="#{systemEnvironment['DATABASE_URL']}"/>
+    </bean>-->
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+<!--        <property name="url" value="#{ 'jdbc:postgresql://' + @dbUrl.getHost() + ':' + @dbUrl.getPort() + @dbUrl.getPath() + '?sslmode=require' }"/>
+        <property name="username" value="#{ @dbUrl.getUserInfo().split(':')[0] }"/>
+        <property name="password" value="#{ @dbUrl.getUserInfo().split(':')[1] }"/>-->
+        <property name="url" value="jdbc:postgresql://localhost:5432/postgres"/>
+        <property name="username" value="sa"/>
+        <property name="password" value="123"/>
+    </bean>
+    <bean id="multipartResolver"
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="268435456"/>
+    </bean>
+
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basename" value="resources/i18n/messages"/>
+    </bean>
+<!--                    <property name="username" value="skyhero2834@gmail.com"/>-->
+<!--                    <property name="password" value="y3MupJKGYD3UiPu"/>-->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="smtp.gmail.com"/>
+        <property name="port" value="465"/>
+        <property name="username" value="tuong100801@gmail.com"/>
+        <property name="password" value="zdgmeknlvpimdjhx"/>
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.auth">true</prop>
+                <prop key="mail.smtp.socketFactory.class">
+                    javax.net.ssl.SSLSocketFactory</prop>
+                <prop key="mail.smtp.socketFactory.port">465</prop>
+                <prop key="mail.smtp.starttls.enable">true</prop>
+                <prop key="mail.debug">true</prop>
+            </props>
+        </property>
+    </bean>
+
+</beans>

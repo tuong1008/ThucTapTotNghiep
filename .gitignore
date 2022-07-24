@@ -1,0 +1,14 @@
+# Netbeans
+nb-configuration.xml
+build/
+nbbuild/
+dist/
+nbdist/
+# IDEA
+target/
+*.iml
+.idea
+out/
+# all
+/phancong.png
+/N18DCCN202_NguyenManhTuong_N18CCN214_NguyenTanThien_WebNike.docx
